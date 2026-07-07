@@ -1,0 +1,167 @@
+<!doctype html><html lang="zh-HK"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>creator-analysis 使用指南</title>
+<style>
+  :root{
+    --ink:#20262B; --muted:#5B6660; --faint:#8A948E;
+    --accent:#0E6B4E; --accent-soft:#E8F2EE; --accent-line:#BCD8CD;
+    --warn:#9A6A12; --warn-bg:#F9F1DE;
+    --ground:#FBFCFB; --card:#FFFFFF; --border:#E3E8E5; --code-bg:#F2F5F3;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang HK","PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+    font-size:16px; line-height:1.75;
+  }
+  .wrap{max-width:700px; margin:0 auto; padding:56px 24px 80px}
+  .eyebrow{font-size:12px; letter-spacing:.14em; color:var(--accent); font-weight:600; text-transform:uppercase}
+  h1{font-size:30px; line-height:1.3; margin:10px 0 8px; font-weight:700; text-wrap:balance}
+  .lede{color:var(--muted); margin:0 0 20px; max-width:36em}
+  .chip{
+    display:inline-flex; align-items:center; gap:8px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12.5px; background:var(--code-bg); border:1px solid var(--border); border-radius:6px;
+    padding:6px 10px; color:var(--muted); overflow-x:auto; max-width:100%; white-space:nowrap;
+  }
+  .chip b{color:var(--accent); font-weight:600}
+  h2{font-size:20px; margin:52px 0 6px; font-weight:700}
+  h2 .no{color:var(--accent); font-variant-numeric:tabular-nums; margin-right:10px}
+  .sub{color:var(--muted); font-size:14.5px; margin:0 0 18px}
+  h3{font-size:16px; margin:0 0 4px; font-weight:600}
+  p{margin:0 0 12px}
+  .card{background:var(--card); border:1px solid var(--border); border-radius:10px; padding:22px 24px; margin:0 0 14px}
+  .card.rec{border:2px solid var(--accent-line)}
+  .badge{display:inline-block; font-size:12px; font-weight:600; color:var(--accent); background:var(--accent-soft); border-radius:5px; padding:2px 9px; margin-left:8px; vertical-align:2px}
+  ol.steps{margin:12px 0 4px; padding:0; list-style:none; counter-reset:s}
+  ol.steps li{
+    counter-increment:s; position:relative; padding:0 0 14px 40px; margin:0;
+  }
+  ol.steps li::before{
+    content:counter(s); position:absolute; left:0; top:1px;
+    width:26px; height:26px; border-radius:50%; background:var(--accent-soft); color:var(--accent);
+    font-size:13.5px; font-weight:700; display:flex; align-items:center; justify-content:center;
+    font-variant-numeric:tabular-nums;
+  }
+  ol.steps li:not(:last-child)::after{
+    content:""; position:absolute; left:12.5px; top:30px; bottom:2px; width:1px; background:var(--border);
+  }
+  .kv{margin:6px 0 8px; padding:0; list-style:none; font-size:15px}
+  .kv li{padding:3px 0}
+  .kv .k{color:var(--muted)}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:.88em; background:var(--code-bg); border:1px solid var(--border); border-radius:4px; padding:1px 6px}
+  pre{
+    background:var(--code-bg); border:1px solid var(--border); border-radius:8px;
+    padding:14px 16px; overflow-x:auto; font-size:13px; line-height:1.6; margin:10px 0 4px;
+  }
+  pre code{background:none; border:none; padding:0}
+  .note{
+    display:flex; gap:10px; background:var(--accent-soft); border-radius:8px;
+    padding:12px 14px; font-size:14px; color:var(--ink); margin:14px 0 0;
+  }
+  .note::before{content:""; flex:0 0 3px; border-radius:2px; background:var(--accent)}
+  table{width:100%; border-collapse:collapse; font-size:14.5px; margin:14px 0 6px}
+  th{font-size:12.5px; letter-spacing:.05em; color:var(--faint); text-align:left; font-weight:600; padding:0 12px 8px 0; border-bottom:1px solid var(--border)}
+  td{padding:10px 12px 10px 0; border-bottom:1px solid var(--border); vertical-align:top}
+  td:first-child{white-space:nowrap; color:var(--muted); font-weight:500}
+  .tblwrap{overflow-x:auto}
+  ul.tips{margin:12px 0 0; padding-left:0; list-style:none}
+  ul.tips li{position:relative; padding:0 0 10px 22px}
+  ul.tips li::before{content:""; position:absolute; left:2px; top:11px; width:7px; height:7px; border-radius:50%; background:var(--accent-line)}
+  .faq dt{font-weight:600; margin:18px 0 4px}
+  .faq dd{margin:0; color:var(--muted)}
+  .warnbox{background:var(--warn-bg); border-radius:10px; padding:20px 24px; margin-top:14px}
+  .warnbox h3{color:var(--warn)}
+  .warnbox ul{margin:8px 0 0; padding-left:20px}
+  .warnbox li{padding:2px 0}
+  footer{margin-top:56px; padding-top:18px; border-top:1px solid var(--border); font-size:13px; color:var(--faint)}
+  a{color:var(--accent)}
+  @media (max-width:480px){ .wrap{padding:36px 18px 60px} h1{font-size:25px} }
+</style>
+
+</head><body>
+<div class="wrap">
+  <div class="eyebrow">Creator analysis · 內部工具指南</div>
+  <h1>喺 Claude 直接分析 Instagram KOL</h1>
+  <p class="lede">互動率、假粉風險、受眾輪廓、合作費參考——一句指令，約一分鐘出完整評估報告。設定一次，之後日常使用零門檻。</p>
+  <span class="chip">MCP endpoint&nbsp;<b>creator-analysis-mcp-production.up.railway.app/mcp</b></span>
+
+  <h2><span class="no">1</span>你需要</h2>
+  <ul class="tips">
+    <li>一個 Claude 帳戶（claude.ai、Claude Desktop 或 Claude Code 均可）</li>
+    <li>一條 <strong>access token</strong>——由管理員發出，等同密碼，請妥善保管</li>
+  </ul>
+
+  <h2><span class="no">2</span>連接（一次性設定，二選一）</h2>
+
+  <div class="card rec">
+    <h3>方法 A：claude.ai / Claude Desktop<span class="badge">推薦</span></h3>
+    <ol class="steps">
+      <li>開 <strong>Settings → Connectors → Add custom connector</strong></li>
+      <li>填寫兩欄，其餘留空：
+        <ul class="kv">
+          <li><span class="k">Name</span>　<code>creator-analysis</code></li>
+          <li><span class="k">Remote MCP server URL</span>　<code>https://creator-analysis-mcp-production.up.railway.app/mcp</code></li>
+          <li><span class="k">OAuth Client ID / Secret</span>　留空（系統自動處理）</li>
+        </ul>
+      </li>
+      <li>按 <strong>Add</strong>，然後按 <strong>Connect</strong></li>
+      <li>瀏覽器彈出授權頁 → 輸入你的 access token → 完成</li>
+    </ol>
+    <div class="note">授權有效 30 日；到期後重按 Connect 再輸入一次即可。</div>
+  </div>
+
+  <div class="card">
+    <h3>方法 B：Claude Code（CLI）</h3>
+    <pre><code>claude mcp add --transport http creator-analysis \
+  https://creator-analysis-mcp-production.up.railway.app/mcp \
+  --header "Authorization: Bearer 你的token"</code></pre>
+  </div>
+
+  <h2><span class="no">3</span>開始使用</h2>
+  <p class="sub">連接好之後直接用自然語言。以下係常用例句：</p>
+  <div class="tblwrap">
+  <table>
+    <tr><th>你想做</th><th>咁樣講</th></tr>
+    <tr><td>分析單一 KOL</td><td>「幫我分析 instagram.com/eat.food.and.chill 適唔適合合作」</td></tr>
+    <tr><td>多人比較</td><td>「比較 @kol_a、@kol_b、@kol_c，邊個最適合我哋甜品店？」</td></tr>
+    <tr><td>配合自己品牌</td><td>「我品牌係 @mybrand_hk，分析 @kol_a 嘅受眾匹配度」</td></tr>
+    <tr><td>深入分析</td><td>「就 @kol_a 做深入分析：內容主題分佈、最佳發文時段」</td></tr>
+    <tr><td>草擬邀請</td><td>「幫我草擬一封俾 @kol_a 嘅合作邀請訊息」</td></tr>
+  </table>
+  </div>
+  <p class="sub" style="margin-top:10px">報告涵蓋：互動率（對比同級基準）、假粉評分與風險等級、受眾性別／年齡／地區、粉絲增長、表現最佳內容、過往品牌合作、風險審查、評分結論與合作形式建議。</p>
+
+  <h2><span class="no">4</span>使用貼士</h2>
+  <ul class="tips">
+    <li>一個 KOL 報告約需 <strong>1 分鐘</strong>，期間會顯示進度條</li>
+    <li>每條 token 有每分鐘 30 次請求上限，正常使用唔會觸及</li>
+    <li>數據來自 Creator Recommendation API 實測（非估算），報告內標明數據更新日期</li>
+    <li>未入庫嘅新帳號可能未有假粉／受眾數據，報告會註明並以公開資料補充</li>
+  </ul>
+
+  <h2><span class="no">5</span>常見問題</h2>
+  <dl class="faq">
+    <dt>撳 Connect 之後話 token 無效？</dt>
+    <dd>檢查有冇多咗空格；token 區分大小寫。仍然唔得就搵管理員確認 token 狀態。</dd>
+    <dt>出現 401 Unauthorized？</dt>
+    <dd>OAuth 授權過咗 30 日，或者你嘅 token 已被撤銷。重新 Connect 一次；唔得就搵管理員。</dd>
+    <dt>出現 429 Rate limit exceeded？</dt>
+    <dd>一分鐘內請求太密，等一分鐘再試。</dd>
+    <dt>Connector 接咗但 Claude 話搵唔到工具？</dt>
+    <dd>開一個新對話再試；Desktop 用戶可以重啟 app。</dd>
+    <dt>Token 唔見咗／懷疑洩漏？</dt>
+    <dd>即刻通知管理員撤銷並補發新 token。</dd>
+  </dl>
+
+  <h2><span class="no">6</span>安全守則</h2>
+  <div class="warnbox">
+    <h3>Token 等同密碼</h3>
+    <ul>
+      <li>唔好貼上群組、共用文件或截圖</li>
+      <li>每人一條 token，唔好互相借用——撤銷時會影響埋你</li>
+      <li>嚟歷不明嘅「授權頁」連結唔好輸入 token。真正授權頁只會喺你自己撳 Connect 時彈出，網址一定係 <code>creator-analysis-mcp-production.up.railway.app</code></li>
+    </ul>
+  </div>
+
+  <footer>有問題搵管理員 · 技術細節見專案 README</footer>
+</div>
+</body></html>
