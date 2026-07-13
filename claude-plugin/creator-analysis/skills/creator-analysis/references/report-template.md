@@ -1,3 +1,5 @@
+**單一 creator 對話報告請用 references/widget-template.md 的固定模板（只換 D 數據）。本檔用於多人比較、文字 fallback 及 HTML 檔報告的 layout 規格。**
+
 # Report output spec
 
 Primary output = interactive GUI dashboard rendered inline in conversation (HTML widget). Secondary = short text summary in the chat response. Full text format at the bottom is the fallback when no widget tool is available.

@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import express from 'express';
+import jpeg from 'jpeg-js';
 import { z } from 'zod';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
@@ -32,6 +33,27 @@ async function callApi(path, params) {
 
 const clean = u => String(u).replace(/^@/, '').trim();
 
+function downscaleJpeg(buf, target = 64) {
+  const img = jpeg.decode(buf, { useTArray: true, maxMemoryUsageInMB: 32 });
+  const { width: w, height: h, data } = img;
+  const s = Math.max(1, Math.min(w, h) / target);
+  const ow = Math.max(1, Math.round(w / s)), oh = Math.max(1, Math.round(h / s));
+  const out = Buffer.alloc(ow * oh * 4);
+  for (let y = 0; y < oh; y++) {
+    const y0 = Math.floor(y * s), y1 = Math.min(h, Math.max(y0 + 1, Math.ceil((y + 1) * s)));
+    for (let x = 0; x < ow; x++) {
+      const x0 = Math.floor(x * s), x1 = Math.min(w, Math.max(x0 + 1, Math.ceil((x + 1) * s)));
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let yy = y0; yy < y1; yy++) for (let xx = x0; xx < x1; xx++) {
+        const i = (yy * w + xx) * 4; r += data[i]; g += data[i + 1]; b += data[i + 2]; n++;
+      }
+      const o = (y * ow + x) * 4;
+      out[o] = r / n; out[o + 1] = g / n; out[o + 2] = b / n; out[o + 3] = 255;
+    }
+  }
+  return jpeg.encode({ data: out, width: ow, height: oh }, 70).data;
+}
+
 // Avatar → data URI, for CSP-restricted widget surfaces that block external image hosts.
 const AVATAR_HOSTS = /(^|\.)goodmalling\.io$|(^|\.)cdninstagram\.com$/;
 const avatarCache = new Map();
@@ -50,9 +72,15 @@ async function fetchAvatarDataUri({ username, url }) {
   if (!AVATAR_HOSTS.test(host)) throw new Error('avatar host not allowed');
   const res = await fetch(target);
   if (!res.ok) throw new Error(`avatar fetch failed: ${res.status}`);
-  const buf = Buffer.from(await res.arrayBuffer());
+  let buf = Buffer.from(await res.arrayBuffer());
   if (buf.length > 300_000) throw new Error('avatar too large to embed');
-  const uri = `data:${res.headers.get('content-type') || 'image/jpeg'};base64,${buf.toString('base64')}`;
+  let type = res.headers.get('content-type') || 'image/jpeg';
+  // Downscale to 64px so the data URI stays ~1-2KB — the widget-generating model has to
+  // copy every base64 char, so bytes here are directly proportional to report latency.
+  if (type.includes('jpeg') && buf.length > 2500) {
+    try { buf = downscaleJpeg(buf); type = 'image/jpeg'; } catch { /* keep original */ }
+  }
+  const uri = `data:${type};base64,${buf.toString('base64')}`;
   avatarCache.set(cacheKey, { uri, exp: Date.now() + 6 * 3600_000 });
   if (avatarCache.size > 500) { const k = avatarCache.keys().next().value; avatarCache.delete(k); }
   return uri;

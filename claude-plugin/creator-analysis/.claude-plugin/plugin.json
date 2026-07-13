@@ -1,6 +1,6 @@
 {
   "name": "creator-analysis",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Instagram creator/KOL analysis reports for evaluating collaboration opportunities. Single-creator deep dives and multi-creator comparisons, tuned for F&B, Beauty and FMCG brands. Data via the creator-analysis MCP connector.",
   "author": {
     "name": "INNOLAB"
