@@ -60,6 +60,16 @@ Username 自動完成（handle 唔確定時先用；用戶直接畀咗完整 han
 用法：優先傳 `url`（creator_research 回應中的 `profile_pic_url_hd`，最快）；冇 URL 先傳 `username`。
 回傳字串直接放入 `<img src="...">`。此工具失敗時 fallback 用姓名首字圓圈，報告不得因此中斷。
 
+### creator_report_link({ username, analysis })
+生成簽名分享連結，server 即時渲染完整 HTML 報告（真頭像、reels 縮圖、增長曲線，無 CSP 限制）。
+**分析完成後必 call，作為預設報告輸出**；連結有效 30 日、不含任何憑證。
+`analysis` 精簡 JSON（總長 <4KB，每個字串從簡）：
+`{sub:"一句定位", verdict:"建議合作", vTone:"success|warning|danger", total:"4.5",
+ scores:[{q:"問題",chip:"放心",t:"success|accent|warning|danger",s:5,r:"理由 ≤45字"}]（5 項）,
+ fake_note:"假粉結論一句", audience:"受眾總結 ≤90字", collabs:"過往合作 ≤90字",
+ risks:[{t:"success|warning|danger",h:"標題",d:"≤30字"}], rec:"建議 ≤90字"}`
+回傳 URL 直接以 markdown link 顯示俾用戶。
+
 ### similar_brands({ username, limit? })
 搵相似品牌（用戶提供品牌 IG 時做受眾匹配校準用）。
 
