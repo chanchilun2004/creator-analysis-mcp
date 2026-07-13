@@ -6,7 +6,9 @@ Primary output = interactive GUI dashboard rendered inline in conversation (HTML
 
 Layout (top to bottom), flat design, CSS variables for theming, works in light/dark mode:
 
-1. **Header card**: creator name + @handle, tier badge (Nano/Micro/Mid/Macro), verdict badge on the right — 建議合作 (green) / 有條件合作 (amber) / 唔建議 (red). One-line positioning summary.
+1. **Header card**: circular avatar + creator name + @handle, tier badge (Nano/Micro/Mid/Macro), verdict badge on the right — 建議合作 (green) / 有條件合作 (amber) / 唔建議 (red). One-line positioning summary.
+   Avatar: use `profile_pic_url_hd` from creator_research as a 48px round `<img>`, with an `onerror` fallback that hides the img and shows an initials circle instead (some surfaces CSP-block external images — the report must still look complete without the photo). Example:
+   `<img src="{profile_pic_url_hd}" style="width:48px;height:48px;border-radius:50%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:48px;height:48px;border-radius:50%;align-items:center;justify-content:center">{initials}</div>`
 2. **Stat cards row** (3–4 cards): Followers, 平均互動 (likes/comments), ER% vs tier 基準 (show benchmark range underneath), 廣告貼文密度. Mark estimates with 「估算」.
 3. **評分 section — plain-language version**: phrase each of the 5 rubric dimensions as a question the client would ask (數據掂唔掂？/ 粉絲係咪你嘅目標客？/ 同品牌合作過未？/ 有冇風險？/ 內容質素高唔高？). Each row = verdict chip (放心 green / 中等 blue / 要留意 amber / 唔掂 red) + score /5 + one-line reason in everyday language. No bare bars without explanation.
 3b. **假粉絲分析 section (mandatory)**: horizontal risk scale 0–100 with colored zones (0–20 極低 green, 20–40 低, 40–70 中等 amber, 70+ 高 red) and a marker at the creator's fake_audience_score; show risk_level and a one-line conclusion with evidence (interaction ratios, comment authenticity, growth pattern).
