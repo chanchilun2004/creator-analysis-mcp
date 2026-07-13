@@ -54,6 +54,12 @@ claude mcp add --transport http creator-analysis \
 ### creator_suggest({ q, limit? })
 Username 自動完成（handle 唔確定時先用；用戶直接畀咗完整 handle／URL 就可以跳過）。
 
+### creator_avatar({ url? , username? })
+將 creator 頭像轉成 base64 data URI（通常 3–10KB）。報告 header 嵌入頭像必用此工具——
+對話 widget 的 CSP 會封鎖外部圖片網域，只有 `data:` URI 能顯示。
+用法：優先傳 `url`（creator_research 回應中的 `profile_pic_url_hd`，最快）；冇 URL 先傳 `username`。
+回傳字串直接放入 `<img src="...">`。此工具失敗時 fallback 用姓名首字圓圈，報告不得因此中斷。
+
 ### similar_brands({ username, limit? })
 搵相似品牌（用戶提供品牌 IG 時做受眾匹配校準用）。
 

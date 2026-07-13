@@ -31,6 +31,32 @@ async function callApi(path, params) {
 }
 
 const clean = u => String(u).replace(/^@/, '').trim();
+
+// Avatar → data URI, for CSP-restricted widget surfaces that block external image hosts.
+const AVATAR_HOSTS = /(^|\.)goodmalling\.io$|(^|\.)cdninstagram\.com$/;
+const avatarCache = new Map();
+async function fetchAvatarDataUri({ username, url }) {
+  let target = url && String(url).trim();
+  const cacheKey = target || `u:${clean(username || '')}`;
+  const hit = avatarCache.get(cacheKey);
+  if (hit && hit.exp > Date.now()) return hit.uri;
+  if (!target) {
+    if (!username) throw new Error('provide username or url');
+    const text = await callApi('/v1/api/creator-research', { username: clean(username) });
+    target = JSON.parse(text)?.data?.profile_pic_url_hd;
+    if (!target) throw new Error('no profile picture available for this creator');
+  }
+  const host = new URL(target).hostname;
+  if (!AVATAR_HOSTS.test(host)) throw new Error('avatar host not allowed');
+  const res = await fetch(target);
+  if (!res.ok) throw new Error(`avatar fetch failed: ${res.status}`);
+  const buf = Buffer.from(await res.arrayBuffer());
+  if (buf.length > 300_000) throw new Error('avatar too large to embed');
+  const uri = `data:${res.headers.get('content-type') || 'image/jpeg'};base64,${buf.toString('base64')}`;
+  avatarCache.set(cacheKey, { uri, exp: Date.now() + 6 * 3600_000 });
+  if (avatarCache.size > 500) { const k = avatarCache.keys().next().value; avatarCache.delete(k); }
+  return uri;
+}
 const wrap = fn => async args => {
   try {
     return { content: [{ type: 'text', text: await fn(args) }] };
@@ -65,6 +91,14 @@ function buildServer() {
     description: 'Find brands similar to a given brand IG handle (embedding similarity). Use for optional brand-context grounding when the user provides their brand IG.',
     inputSchema: { username: z.string().describe('Brand handle or name'), limit: z.number().optional().describe('Default 10, cap 50') }
   }, wrap(a => callApi('/v1/api/similar-brands', { username: clean(a.username), limit: a.limit })));
+
+  server.registerTool('creator_avatar', {
+    description: 'Get a creator profile picture as a base64 data URI (small JPEG, usually 3-10KB) for embedding in CSP-restricted report widgets where external image URLs are blocked. Pass the profile_pic_url_hd from a prior creator_research call as `url` (fastest), or just the `username`. Embed the returned string directly as an <img src>.',
+    inputSchema: {
+      username: z.string().optional().describe('Instagram handle (used if url not given)'),
+      url: z.string().optional().describe('profile_pic_url_hd from creator_research — skips the extra upstream lookup')
+    }
+  }, wrap(a => fetchAvatarDataUri(a)));
 
   return server;
 }
